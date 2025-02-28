@@ -2,7 +2,7 @@
 
 ![example card](image.png)
 
-A Vue SPA based on jeyvi's (@angrygazebo) "spellbook card generator"
+A Vue SPA based on jeyvi's "spellbook card generator"
 
 Credit to [jeyvi](https://x.com/angrygazebo) for the overall card layout\
 Credit to Lorc for creating the lovely [icons](https://www.reddit.com/r/IndieGaming/comments/ifmie/i_made_700_rpg_icons_free_for_use_for_your_game/)
@@ -22,6 +22,33 @@ This is not a replacement for hardcodex unless you personally really want it to 
 This is not a passion project of mine, and not something I intend to spend a substantial time to maintain. That's not to say I'm done with it, but I'm just aiming for the full set of features to more or less mirror that of hardcodex. Until it is at that point, expect updates.
 
 This is not a role model for outstanding webapp code. I am an experienced career (mostly backend) developer, but chose this project in large part due to how foreign a lot of the technology was to me. I would expect someone with a lot of experience in frontend web application development to question some of my decsions. I am open to opportunities for learning--it's why I did this--but please be polite should you intend to share such questions.
+
+# Okay but for real... what does it do?
+
+This app allows you to design and then print cards for spells, items, or whatever you please. It is designed for use with tabletop RPGs, in particular D&D, but there is no inherent reason you can't use it for other things. You can customize the layout, load spell details from a file, and view each card individually before printing them all. The app is reactive, meaning changes you make are instantly reflected in the card preview.
+
+## Card customization
+
+The design consists of a choice in card color and a selection for each of the three icons on the back of the card. Changes to these selections are immediately reflected in the card preview.
+
+Each set of selections is stored as its own design, and you can freely switch between designs using the selection item. You can also rename, copy, or delete card designs. Custom card designs persist between page reloads, but will be lost if you clear site data. You can also back up your custom designs to a JSON file or load designs from a backup. Please note that loading from a file will **replace** any custom designs already loaded.
+
+The app comes preloaded with several sample designs, which cannot be renamed or deleted but can be copied. Changing the color or an icon in a default design will automatically create a copy and apply the edit to that copy instead.
+
+## Spell list
+
+Here you can view the items loaded into the app and select them in the selection box to preview each one instantly in the card preview. You can load a file to replace your spell list with the data from the file, or save a list to a file.
+
+When printing a spell list, you can select paper size and orientation from your browser's print options. For letter or A4 paper, I would recommend portrait mode for single-sided cards and landscape mode for double-sided, but you can experiment and do what works best for you.
+
+A limited set of markup is allowed inside the spell card itself, but only in the description area. This example card showcases each supported markup, and the Element Inspection in the browser's dev tools shows how to achieve them.
+
+<details>
+<summary>Example</summary>
+
+![Marked Card](image-3.png)
+
+</details>
 
 # How do I use it?
 
@@ -53,10 +80,10 @@ Good news: you can fix your CSV with a bit of regex.
 ## The problem
 
 The CSV format for hardcodex stores the required materials for a spell inside the description, like so:\
-"level";"name";...;"cast time";"(needed materials)description";...
+"level";"name";...;"duration";"(needed materials)description";...
 
 I instead opted to put that in its own column, right before the description, like so:\
-"level";"name";...;"cast time";"needed materials";"description";...
+"level";"name";...;"duration";"needed materials";"description";...
 
 ## What it looks like
 
