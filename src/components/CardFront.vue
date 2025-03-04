@@ -12,7 +12,9 @@ defineProps<IProps>()
 <template>
   <div class="front">
     <div class="body">
-      <h3 class="name lined srname">{{ spell.name }}</h3>
+      <h3 class="name lined srname" :class="{ small: spell.name.endsWith(']') }">
+        {{ spell.name }}
+      </h3>
 
       <div v-if="spell.castingTime != '' || spell.range != ''" class="status lined">
         <div><em>casting time</em>{{ spell.castingTime }}</div>
@@ -59,10 +61,11 @@ defineProps<IProps>()
   text-transform: uppercase;
   text-align: center;
   min-height: 20px;
+  font-weight: bold;
 }
 
-.srname {
-  font-weight: bold;
+.name.small {
+  font-size: 12px;
 }
 
 .status {
