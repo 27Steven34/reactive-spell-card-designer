@@ -109,9 +109,21 @@ function paginateText(text: string) {
 
   currentPage.innerHTML = ''
 
-  const textArray = text.split(' ')
+  const textArray = text
+    .replace(new RegExp('([^ ])<', 'g'), '$1 <')
+    .replace(new RegExp('>([^ ])', 'g'), '> $1')
+    .split(' ')
+  const formatStack: string[] = []
   textArray.forEach((word) => {
-    if (!appendToPage(word)) {
+    if (word.startsWith('</')) {
+      formatStack.pop()
+      return
+    }
+    if (word.startsWith('<') && !['<br>', '<wbr>'].includes(word)) {
+      formatStack.push(word)
+      return
+    }
+    if (!appendToPage(formatStack.join('') + word)) {
       paginatedText.push(currentPage.innerHTML)
       currentPage.innerHTML = ''
       appendToPage(word)
