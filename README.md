@@ -98,12 +98,12 @@ If it's a small number of spells, feel free to change manually to match the new 
 
 First, we need to add the extra column to all of the spells, with a really narsty braindead regex that I did not try too hard to simplify.
 Simply open your file in an editor that supports regex find/replace with capture groups (I use Notepad++).\
-Find: `([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)("[\w]*")`\
+Find: `([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)([^;]*)(;)("[^"]*")`\
 Replace: `$1$2$3$4$5$6$7$8$9$10$11$12$13$14$14$15$16$17` (yes, $14 is in there twice, that's the only thing that results in a change)
 
 Second, we need to move the needed materials, for spells that have them, into this new column, leaving it empty for spells that do not.\
 Find: `;"\(([^\)]*)\)`\
-Replace: `"\1";"`
+Replace: `"$1";"`
 
 Be sure to run these only once per spell! The regex may match and replace already-fixed spells, causing them to become not-so-fixed if run a second time.
 
