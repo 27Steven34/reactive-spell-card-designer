@@ -136,6 +136,8 @@ function paginateText(text: string) {
 
   return paginatedText
 }
+
+paginateSpells()
 </script>
 
 <template>
