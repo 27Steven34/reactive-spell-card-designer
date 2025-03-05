@@ -5,6 +5,7 @@ import { useSpellListStore } from '@/stores/spellList'
 import { computed, nextTick, ref, toRaw } from 'vue'
 import LoadSave from './LoadSave.vue'
 import SpellCard from './SpellCard.vue'
+import type { SupportedType } from '@/utils/FileUtils'
 
 interface IEmits {
   'update-spell': [newSpell: SpellModel]
@@ -24,23 +25,35 @@ const selectedSpell = computed<SpellModel>(() => {
   return newSpell
 })
 
+const saveFileType = ref<SupportedType>('application/json')
+
 const loadSpellsFromFile = (file: File) => {
   const fileReader = new FileReader()
   fileReader.onload = (_ev: ProgressEvent<FileReader>) => {
     try {
       const results = fileReader.result?.toString()
       if (results != null && results != '') {
-        spellListStore.loadSpellsFromCSV(results)
+        switch (file.type) {
+          case 'application/json':
+            spellListStore.loadSpellsFromJson(results)
+            break
+          case 'text/csv':
+            spellListStore.loadSpellsFromCSV(results)
+            break
+          default:
+            throw new Error('Unsupported file type: ' + file.type)
+        }
+
         console.log('Finished loading spell list:', spellListStore.spellList)
         selectedId.value = 0
         paginateSpells()
       }
     } catch (error) {
-      console.error('Error while reading CSV file:', error)
+      console.error('Error while reading spell list file:', error)
     }
   }
   fileReader.onerror = (ev: ProgressEvent<FileReader>) => {
-    console.error('Error while reading CSV file:', ev.target?.error)
+    console.error('Error while reading spell list file:', ev.target?.error)
   }
   fileReader.readAsText(file)
 }
@@ -171,10 +184,24 @@ paginateSpells()
       "
     >
       <LoadSave
-        supported-mimes="text/csv"
+        supported-mimes="text/csv application/json"
         @file-loaded="(file: File) => loadSpellsFromFile(file)"
-        @save="() => spellListStore.downloadSpellList()"
+        @save="() => spellListStore.downloadSpellList(saveFileType)"
       >
+        <div>
+          <input
+            id="saveJson"
+            v-model="saveFileType"
+            type="radio"
+            name="JSON"
+            value="application/json"
+          />
+          <label for="saveJson">JSON</label>
+        </div>
+        <div>
+          <input id="saveCsv" v-model="saveFileType" type="radio" name="CSV" value="text/csv" />
+          <label for="saveCsv">CSV</label>
+        </div>
         <button @click="emit('print-spells')">Print</button>
       </LoadSave>
     </div>

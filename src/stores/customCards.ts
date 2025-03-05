@@ -1,26 +1,13 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { CardModel, CardListModel } from '@/models/CardModel'
+import { saveToJsonFile } from '@/utils/FileUtils'
 
 export const CUSTOM_MIN_ID = 100
 export const CUSTOM_MAX_ID = 9999
 
 function getNextClassId(ids: number[]) {
   return Math.min(Math.max(CUSTOM_MIN_ID, Math.max(...ids) + 1), CUSTOM_MAX_ID)
-}
-
-async function saveToFile(cardModels: CardListModel) {
-  const blobURL = URL.createObjectURL(new Blob([JSON.stringify(cardModels, null, 2)], { type: "application/json" }))
-  try {
-    const link = document.createElement('a')
-    link.href = blobURL
-    link.download = 'card-designs-backup.json'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  } finally {
-    URL.revokeObjectURL(blobURL)
-  }
 }
 
 async function loadFromJson(jsonString: string) {
@@ -95,7 +82,7 @@ export const useCustomCardStore = defineStore('customCards', () => {
   }
 
   async function saveCustomClasses() {
-    await saveToFile(customClasses.value)
+    await saveToJsonFile(customClasses.value, 'card-designs-backup')
   }
 
   async function loadCustomClassesFromJson(jsonString: string) {

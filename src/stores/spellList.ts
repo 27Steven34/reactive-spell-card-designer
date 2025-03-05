@@ -1,4 +1,5 @@
 import { type SpellModel } from '@/models/SpellModel'
+import { saveToCsvFile, saveToJsonFile, type SupportedType } from '@/utils/FileUtils'
 import Papa from 'papaparse'
 import { defineStore } from "pinia"
 import { ref } from 'vue'
@@ -14,50 +15,36 @@ function createSpell(spellData: string[]) {
   return spellRecord
 }
 
-async function saveToFile(spellList: SpellModel[]) {
-  const spellFileContents = Papa.unparse(
-    spellList,
-    {
-      quotes: true,
-      delimiter: ';',
-      header: false,
-      skipEmptyLines: 'greedy',
-      columns: spellHeaders,
-      escapeFormulae: true
-    }
-  );
-  const blobURL = URL.createObjectURL(
-    new Blob([spellFileContents],
-      { type: "text/csv" })
-  )
-  try {
-    const link = document.createElement('a')
-    link.href = blobURL
-    link.download = 'spell-list.csv'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  } finally {
-    URL.revokeObjectURL(blobURL)
-  }
-}
-
 export const useSpellListStore = defineStore('spellList', () => {
   const spellList = ref<SpellModel[]>([])
 
-  async function downloadSpellList() {
-    await saveToFile(spellList.value)
+  async function downloadSpellList(type: SupportedType) {
+    switch (type) {
+      case 'application/json':
+        await saveToJsonFile(spellList.value, 'spell-list')
+        break
+      case 'text/csv':
+        await saveToCsvFile(spellList.value, 'spell-list', spellHeaders)
+        break
+      default:
+        console.warn(`Unsupported save file type in spellList store: ${type}`)
+    }
   }
 
   async function loadSpellsFromCSV(spellCSV: string) {
-    spellList.value = []
+    const parsedList: SpellModel[] = []
     Papa.parse<string[]>(spellCSV, {
       skipEmptyLines: 'greedy',
       step: (results, _parser) => {
-        spellList.value.push(createSpell(results.data))
+        parsedList.push(createSpell(results.data))
       },
     })
+    spellList.value = parsedList
   }
 
-  return { spellList, downloadSpellList, loadSpellsFromCSV }
+  async function loadSpellsFromJson(spellJson: string) {
+    spellList.value = JSON.parse(spellJson)
+  }
+
+  return { spellList, downloadSpellList, loadSpellsFromCSV, loadSpellsFromJson }
 })
