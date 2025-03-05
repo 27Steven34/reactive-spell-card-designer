@@ -1,11 +1,21 @@
 import { type SpellModel } from '@/models/SpellModel'
 import { saveToCsvFile, saveToJsonFile, type SupportedType } from '@/utils/FileUtils'
 import Papa from 'papaparse'
-import { defineStore } from "pinia"
+import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-const spellHeaders: string[] =
-  ['level', 'name', 'type', 'castingTime', 'range', 'components', 'duration', 'neededMaterials', 'description', 'source']
+const spellHeaders: string[] = [
+  'level',
+  'name',
+  'type',
+  'castingTime',
+  'range',
+  'components',
+  'duration',
+  'neededMaterials',
+  'description',
+  'source',
+]
 
 function createSpell(spellData: string[]) {
   const spellRecord: SpellModel = spellData.reduce((carry, item, index) => {

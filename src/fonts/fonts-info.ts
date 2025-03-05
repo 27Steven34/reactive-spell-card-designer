@@ -1,6 +1,6 @@
 export interface FontInfo {
-  name: string,
-  rangeStart: string,
+  name: string
+  rangeStart: string
   rangeSize: number
 }
 
@@ -10,11 +10,11 @@ export interface FontInfoList {
 
 const fontsInfo: FontInfoList = {
   /** Credit to "Lorc" for these icons */
-  "rpg-icons": {
-    name: "rpg-icons",
+  'rpg-icons': {
+    name: 'rpg-icons',
     rangeStart: 'e000',
-    rangeSize: 789
-  }
+    rangeSize: 789,
+  },
 }
 
 export default fontsInfo

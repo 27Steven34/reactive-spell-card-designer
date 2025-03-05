@@ -25,12 +25,14 @@ async function loadFromLocalStorage() {
 function deGapClassIds(cardsList: CardListModel) {
   const newCardsList: CardListModel = {}
   let nextId = CUSTOM_MIN_ID
-  Object.keys(cardsList).map(Number).forEach(id => {
-    if (nextId <= CUSTOM_MAX_ID) {
-      newCardsList[nextId++] = cardsList[id]
-      delete cardsList[id]
-    }
-  });
+  Object.keys(cardsList)
+    .map(Number)
+    .forEach((id) => {
+      if (nextId <= CUSTOM_MAX_ID) {
+        newCardsList[nextId++] = cardsList[id]
+        delete cardsList[id]
+      }
+    })
   return newCardsList
 }
 
@@ -90,5 +92,14 @@ export const useCustomCardStore = defineStore('customCards', () => {
     persistCustomClasses()
   }
 
-  return { customClasses, resetFromLocalStorage, persistCustomClasses, addCustomClass, renameClass, deleteClass, saveCustomClasses, loadCustomClassesFromJson }
+  return {
+    customClasses,
+    resetFromLocalStorage,
+    persistCustomClasses,
+    addCustomClass,
+    renameClass,
+    deleteClass,
+    saveCustomClasses,
+    loadCustomClassesFromJson,
+  }
 })
