@@ -5,27 +5,85 @@ name: Node CI Unit Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
-  build:
+  define-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: ${{ steps.set-matrix.outputs.node-version }}
+    steps:
+      - name: Set up matrix
+        id: set-matrix
+        run: echo "node-version=['18.x', '20.x', '22.x']" >> "$GITHUB_OUTPUT"
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
+  build:
+    timeout-minutes: 5
+    needs: define-matrix
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: ${{ fromJson(needs.define-matrix.outputs.node-version) }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm run test:unit
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+
+  test-unit:
+    timeout-minutes: 5
+    needs: [define-matrix, build]
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.define-matrix.outputs.node-version) }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm run test:unit
+
+  test-e2e:
+    timeout-minutes: 15
+    needs: [define-matrix, build]
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.define-matrix.outputs.node-version) }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js  ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.node-version }}
+          path: playwright-report/
+          retention-days: 10
