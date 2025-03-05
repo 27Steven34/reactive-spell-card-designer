@@ -38,7 +38,7 @@ const loadSpellsFromFile = (file: File) => {
             spellListStore.loadSpellsFromJson(results)
             break
           case 'text/csv':
-            spellListStore.loadSpellsFromCSV(results)
+            spellListStore.loadSpellsFromCsv(results)
             break
           default:
             throw new Error('Unsupported file type: ' + file.type)

@@ -31,9 +31,9 @@ export const useSpellListStore = defineStore('spellList', () => {
     }
   }
 
-  async function loadSpellsFromCSV(spellCSV: string) {
+  async function loadSpellsFromCsv(spellCsv: string) {
     const parsedList: SpellModel[] = []
-    Papa.parse<string[]>(spellCSV, {
+    Papa.parse<string[]>(spellCsv, {
       skipEmptyLines: 'greedy',
       step: (results, _parser) => {
         parsedList.push(createSpell(results.data))
@@ -46,5 +46,5 @@ export const useSpellListStore = defineStore('spellList', () => {
     spellList.value = JSON.parse(spellJson)
   }
 
-  return { spellList, downloadSpellList, loadSpellsFromCSV, loadSpellsFromJson }
+  return { spellList, downloadSpellList, loadSpellsFromCsv: loadSpellsFromCsv, loadSpellsFromJson }
 })
