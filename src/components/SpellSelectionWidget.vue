@@ -106,6 +106,7 @@ async function paginateSpells() {
     }
   }
   testingMode.value = false
+  testSpell.value = emptySpell
   spellListStore.spellList = newSpellList
 }
 
@@ -116,47 +117,65 @@ function paginateText(text: string) {
   )[0] as HTMLElement
   const currentPage = testSpellCardElement.value?.getElementsByClassName('text')[0] as HTMLElement
 
-  if (currentPage == undefined) {
+  if (currentPage == undefined || fitsInPage(text)) {
     return [text]
   }
 
   currentPage.innerHTML = ''
 
-  const textArray = text
-    .replace(new RegExp('([^ ])<', 'g'), '$1 <')
-    .replace(new RegExp('>([^ ])', 'g'), '> $1')
-    .split(' ')
-  const formatStack: string[] = []
-  textArray.forEach((word) => {
-    if (word.startsWith('</')) {
-      formatStack.pop()
-      return
+  const textArray: string[] = text.split(' ')
+  while (textArray.length > 0) {
+    let min = 0
+    let max = textArray.length - 1
+    let mid = max
+    while (min < max) {
+      const words = textArray.slice(0, mid + 1).join(' ')
+      if (fitsInPage(words)) {
+        min = mid
+      } else {
+        max = mid - 1
+      }
+      mid = Math.floor((min + max + 1) / 2)
     }
-    if (word.startsWith('<') && !['<br>', '<wbr>'].includes(word)) {
-      formatStack.push(word)
-      return
-    }
-    if (!appendToPage(formatStack.join('') + word)) {
-      paginatedText.push(currentPage.innerHTML)
-      currentPage.innerHTML = ''
-      appendToPage(word)
-    }
-  })
-
-  if (currentPage.innerHTML != '') {
-    paginatedText.push(currentPage.innerHTML)
+    const textPage = textArray.splice(0, min + 1).join(' ')
+    paginatedText.push(addUnopenedTags(textPage))
   }
 
-  function appendToPage(word: string) {
-    let itFits = true
-    const pageText = currentPage!.innerHTML
-    currentPage!.innerHTML += word + ' '
+  function fitsInPage(words: string) {
+    currentPage!.innerHTML = words
+    return pageContainer!.offsetHeight >= pageContainer!.scrollHeight
+  }
 
-    if (pageContainer!.offsetHeight < pageContainer!.scrollHeight) {
-      currentPage!.innerHTML = pageText
-      itFits = false
+  function addUnopenedTags(text: string) {
+    const tagPattern: RegExp = /<\/?([a-zA-Z]+)[^>]*>/g
+    const openTags: string[] = []
+    const closeTags: string[] = []
+    let match: RegExpExecArray | null
+
+    while ((match = tagPattern.exec(text)) !== null) {
+      if (match[0][1] === '/') {
+        // Closing tag
+        const lastTag = openTags.pop()
+        const newTag = match[1]
+        if (lastTag === undefined) {
+          closeTags.push(newTag)
+        } else if (lastTag !== newTag) {
+          // Mismatched tag, add the lastTag back and push new close tag
+          openTags.push(lastTag)
+          closeTags.push(newTag)
+        }
+      } else if (!['<br>', '<wbr>'].includes(match[0])) {
+        // Opening tag
+        openTags.push(match[1])
+      }
     }
-    return itFits
+
+    // Add the unopened tags at the beginning of the text
+    const unopenedTags = closeTags
+      .reverse()
+      .map((tag) => `<${tag}>`)
+      .join('')
+    return unopenedTags + text
   }
 
   return paginatedText
