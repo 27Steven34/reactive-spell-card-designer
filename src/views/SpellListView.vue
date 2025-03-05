@@ -3,30 +3,13 @@ import CardCustomizer from '@/components/CardCustomizer.vue'
 import CardPrint from '@/components/CardPrint.vue'
 import SpellCard from '@/components/SpellCard.vue'
 import SpellSelectionWidget from '@/components/SpellSelectionWidget.vue'
-import type { CardModel } from '@/models/CardModel'
-import type { SpellModel } from '@/models/SpellModel'
+import { emptyCard, type CardModel } from '@/models/CardModel'
+import { emptySpell, type SpellModel } from '@/models/SpellModel'
 import { nextTick, ref } from 'vue'
 
-const cardModel = ref<CardModel>({
-  name: '',
-  color: '',
-  topIcon: '',
-  midIcon: '',
-  botIcon: '',
-})
+const cardModel = ref<CardModel>(emptyCard)
 
-const selectedSpell = ref<SpellModel>({
-  name: '',
-  level: '',
-  castingTime: '',
-  range: '',
-  components: '',
-  duration: '',
-  neededMaterials: '',
-  description: '',
-  source: '',
-  type: '',
-})
+const selectedSpell = ref<SpellModel>(emptySpell)
 
 const twoSided = ref<boolean>(true)
 

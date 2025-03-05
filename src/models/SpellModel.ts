@@ -11,6 +11,19 @@ export interface SpellModel {
   type: string
 }
 
+export const emptySpell: SpellModel = {
+  name: '',
+  level: '',
+  castingTime: '',
+  range: '',
+  components: '',
+  duration: '',
+  neededMaterials: '',
+  description: '',
+  source: '',
+  type: '',
+}
+
 export const defaultSpells: SpellModel[] = [
   {
     name: 'Fireball',

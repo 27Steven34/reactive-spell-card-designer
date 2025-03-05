@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type CardModel } from '@/models/CardModel'
-import { defaultSpells, type SpellModel } from '@/models/SpellModel'
+import { emptyCard } from '@/models/CardModel'
+import { emptySpell, defaultSpells, type SpellModel } from '@/models/SpellModel'
 import { useSpellListStore } from '@/stores/spellList'
 import { computed, nextTick, ref, toRaw } from 'vue'
 import LoadSave from './LoadSave.vue'
@@ -56,27 +56,6 @@ const loadSpellsFromFile = (file: File) => {
     console.error('Error while reading spell list file:', ev.target?.error)
   }
   fileReader.readAsText(file)
-}
-
-const emptySpellDesign: CardModel = {
-  name: '',
-  color: '#000000',
-  topIcon: '',
-  midIcon: '',
-  botIcon: '',
-}
-
-const emptySpell: SpellModel = {
-  name: '',
-  level: '',
-  castingTime: '',
-  range: '',
-  components: '',
-  duration: '',
-  neededMaterials: '',
-  description: '',
-  source: '',
-  type: '',
 }
 
 const testSpellCardElement = ref<HTMLElement>()
@@ -241,7 +220,7 @@ paginateSpells()
     </select>
   </div>
   <div v-if="testingMode" ref="testSpellCardElement">
-    <SpellCard :card-design="emptySpellDesign" :spell-info="testSpell" :two-sided="false" />
+    <SpellCard :card-design="emptyCard" :spell-info="testSpell" :two-sided="false" />
   </div>
 </template>
 

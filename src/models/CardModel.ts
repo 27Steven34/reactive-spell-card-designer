@@ -10,6 +10,14 @@ export interface CardListModel {
   [index: number]: CardModel
 }
 
+export const emptyCard: CardModel = {
+  name: '',
+  color: '#000000',
+  topIcon: '',
+  midIcon: '',
+  botIcon: '',
+}
+
 const defaultClasses: CardListModel = {
   0: {
     name: 'Bard',
