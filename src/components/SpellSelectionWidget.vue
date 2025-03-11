@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { emptyCard } from '@/models/CardModel'
-import { emptySpell, defaultSpells, type SpellModel } from '@/models/SpellModel'
+import { emptySpell, type SpellModel } from '@/models/SpellModel'
 import { useSpellListStore } from '@/stores/spellList'
 import { computed, nextTick, ref, toRaw } from 'vue'
 import LoadSave from './LoadSave.vue'
@@ -13,7 +13,7 @@ interface IEmits {
 }
 
 const spellListStore = useSpellListStore()
-spellListStore.spellList = defaultSpells
+spellListStore.loadDefaultSpells()
 
 const emit = defineEmits<IEmits>()
 
