@@ -6,6 +6,7 @@ import { computed, nextTick, ref, toRaw } from 'vue'
 import LoadSave from './LoadSave.vue'
 import SpellCard from './SpellCard.vue'
 import type { SupportedType } from '@/utils/FileUtils'
+import { createFilters, applyFilters } from '@/utils/Filters'
 
 interface IEmits {
   'update-spell': [newSpell: SpellModel]
@@ -20,10 +21,33 @@ const emit = defineEmits<IEmits>()
 const selectedId = ref<number>(0)
 
 const selectedSpell = computed<SpellModel>(() => {
-  const newSpell = spellListStore.spellList[selectedId.value]
+  const newSpell = visibleSpells.value[selectedId.value]
   emit('update-spell', newSpell)
   return newSpell
 })
+
+const filtersDialog = ref<HTMLDialogElement>()
+
+const selectedFilters = ref<Record<string, Set<string>>>({})
+
+const availableFilters = computed<Record<string, Set<string>>>(() => {
+  return createFilters(spellListStore.spellList) as Record<string, Set<string>>
+})
+
+const visibleSpells = computed<SpellModel[]>(() => {
+  return applyFilters(spellListStore.spellList, selectedFilters.value)
+})
+
+const toggleFilter = (filterName: string, option: string) => {
+  if (selectedFilters.value[filterName] == undefined) {
+    selectedFilters.value[filterName] = new Set()
+  }
+  if (selectedFilters.value[filterName].has(option)) {
+    selectedFilters.value[filterName].delete(option)
+  } else {
+    selectedFilters.value[filterName].add(option)
+  }
+}
 
 const saveFileType = ref<SupportedType>('application/json')
 
@@ -181,6 +205,23 @@ paginateSpells()
         align-items: flex-start;
       "
     >
+      <button @click.stop="filtersDialog?.showModal()">Filters...</button>
+      <dialog ref="filtersDialog">
+        <form
+          v-click-outside="() => filtersDialog?.close()"
+          method="dialog"
+          class="filters-container"
+        >
+          <div v-for="(filter, filterName) in availableFilters" :key="filterName">
+            <label>{{ filterName }}</label>
+            <div v-for="option in filter" :key="option.toString()">
+              <label>{{ option }}</label>
+              <input type="checkbox" @change="() => toggleFilter(filterName, option)" />
+            </div>
+          </div>
+          <button>Apply</button>
+        </form>
+      </dialog>
       <LoadSave
         supported-mimes="text/csv application/json"
         @file-loaded="(file: File) => loadSpellsFromFile(file)"
@@ -210,7 +251,7 @@ paginateSpells()
       size="10"
     >
       <option
-        v-for="(spell, index) in spellListStore.spellList"
+        v-for="(spell, index) in visibleSpells"
         :key="index"
         :value="index"
         :title="spell.name"
@@ -227,6 +268,10 @@ paginateSpells()
 <style scoped>
 .spell-list-container {
   max-width: 20rem;
+}
+
+dialog {
+  margin: auto;
 }
 
 button {
