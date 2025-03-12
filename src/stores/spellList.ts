@@ -1,4 +1,5 @@
-import { type SpellModel } from '@/models/SpellModel'
+import defaultSpells from '../../data/spells/spells_en.json'
+import { testSpells, type SpellModel } from '@/models/SpellModel'
 import { saveToCsvFile, saveToJsonFile, type SupportedType } from '@/utils/FileUtils'
 import Papa from 'papaparse'
 import { defineStore } from 'pinia'
@@ -56,5 +57,15 @@ export const useSpellListStore = defineStore('spellList', () => {
     spellList.value = JSON.parse(spellJson)
   }
 
-  return { spellList, downloadSpellList, loadSpellsFromCsv: loadSpellsFromCsv, loadSpellsFromJson }
+  async function loadDefaultSpells() {
+    try {
+      spellList.value = defaultSpells
+    } catch (error) {
+      console.error('Error loading default spells: ', error)
+      console.error('Using test spells instead')
+      spellList.value = testSpells
+    }
+  }
+
+  return { spellList, downloadSpellList, loadSpellsFromCsv, loadSpellsFromJson, loadDefaultSpells }
 })
