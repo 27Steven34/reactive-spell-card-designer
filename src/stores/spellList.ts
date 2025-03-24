@@ -29,13 +29,17 @@ function createSpell(spellData: string[]) {
 export const useSpellListStore = defineStore('spellList', () => {
   const spellList = ref<SpellModel[]>([])
 
-  async function downloadSpellList(type: SupportedType) {
+  async function downloadSpellList(type: SupportedType, spellsToSave?: SpellModel[]) {
+    if (!spellsToSave) {
+      spellsToSave = spellList.value
+    }
+
     switch (type) {
       case 'application/json':
-        await saveToJsonFile(spellList.value, 'spell-list')
+        await saveToJsonFile(spellsToSave, 'spell-list')
         break
       case 'text/csv':
-        await saveToCsvFile(spellList.value, 'spell-list', spellHeaders)
+        await saveToCsvFile(spellsToSave, 'spell-list', spellHeaders)
         break
       default:
         console.warn(`Unsupported save file type in spellList store: ${type}`)

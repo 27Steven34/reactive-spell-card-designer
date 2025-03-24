@@ -11,7 +11,7 @@ import type { Filterable } from '@/utils/Filters'
 
 interface IEmits {
   'update-spell': [newSpell: SpellModel]
-  'print-spells': []
+  'print-spells': [spellList: SpellModel[]]
 }
 
 const spellListStore = useSpellListStore()
@@ -192,7 +192,7 @@ paginateSpells()
       <LoadSave
         supported-mimes="text/csv application/json"
         @file-loaded="(file: File) => loadSpellsFromFile(file)"
-        @save="() => spellListStore.downloadSpellList(saveFileType)"
+        @save="() => spellListStore.downloadSpellList(saveFileType, visibleSpells)"
       >
         <div>
           <input
@@ -208,7 +208,7 @@ paginateSpells()
           <input id="saveCsv" v-model="saveFileType" type="radio" name="CSV" value="text/csv" />
           <label for="saveCsv">CSV</label>
         </div>
-        <button @click="emit('print-spells')">Print</button>
+        <button @click="emit('print-spells', visibleSpells)">Print</button>
       </LoadSave>
     </div>
     <div class="spell-list-container">

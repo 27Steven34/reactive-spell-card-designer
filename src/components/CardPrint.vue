@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import type { CardModel } from '@/models/CardModel'
-import { useSpellListStore } from '@/stores/spellList'
 import SpellCard from './SpellCard.vue'
-
-const spellList = useSpellListStore().spellList
+import type { SpellModel } from '@/models/SpellModel'
 
 interface IProps {
   cardModel: CardModel
+  spellList: SpellModel[]
   twoSided?: boolean
 }
 
