@@ -1,31 +1,46 @@
+export type FilterType = string | number | boolean
+
 export interface Filterable extends Record<string, unknown> {
-  meta?: Record<string, unknown>
+  filterFields?: Record<string, FilterType | FilterType[]>
 }
 
 export type FilterOptions = {
-  [key: string]: Set<unknown>
+  [key: string]: { values: Set<FilterType>; multiple: boolean }
 }
 
-export function createFilters<T extends Filterable>(data: T[]): FilterOptions {
+export function createFilters<T extends Filterable>(
+  data: T[],
+  excludeKeys: string[] = [],
+): FilterOptions {
   const filters: FilterOptions = {}
 
-  function addOption(optionName: string, optionValue: unknown) {
-    if (!filters[optionName]) {
-      filters[optionName] = new Set<typeof optionValue>()
+  function addOption(optionName: string, optionValue: FilterType | FilterType[]) {
+    if (excludeKeys.includes(optionName)) {
+      return
     }
-    filters[optionName].add(optionValue)
+
+    if (!filters[optionName]) {
+      filters[optionName] = { values: new Set<FilterType>(), multiple: false }
+    }
+
+    if (optionValue instanceof Array) {
+      filters[optionName].multiple = true
+      optionValue.map((item) => filters[optionName].values.add(item))
+    } else {
+      filters[optionName].values.add(optionValue)
+    }
   }
 
   data.forEach((item) => {
-    Object.keys(item).forEach((key) => {
-      if (key === 'meta' && typeof item[key] === 'object' && item[key] !== null) {
-        Object.keys(item[key]).forEach((metaKey) => {
-          addOption(metaKey, item[key]![metaKey] as string)
-        })
-      } else {
-        addOption(key, item[key] as string)
-      }
-    })
+    if (item.filterFields !== undefined) {
+      Object.keys(item.filterFields).forEach((key) => {
+        addOption(key, item.filterFields![key] as string)
+      })
+    }
+  })
+
+  Object.keys(filters).forEach((key) => {
+    filters[key].values = new Set(Array.from(filters[key].values).sort())
   })
 
   return filters
@@ -34,14 +49,24 @@ export function createFilters<T extends Filterable>(data: T[]): FilterOptions {
 export function applyFilters<T extends Filterable>(data: T[], filters: FilterOptions): T[] {
   return data.filter((item) => {
     return Object.keys(filters).every((filterName) => {
-      if (filters[filterName].size === 0) {
-        // No filter applied
+      if (filters[filterName].values.size === 0) {
+        // No filter applied to this field
         return true
       }
 
-      const metaValue = item.meta && filterName in item.meta ? item.meta[filterName] : ''
-      const itemValue = (filterName in item ? item[filterName] : metaValue) as string
-      return itemValue && filters[filterName].has(itemValue)
+      if (filters[filterName].multiple) {
+        const itemValues = (
+          item.filterFields && filterName in item.filterFields ? item.filterFields[filterName] : []
+        ) as FilterType[]
+        return Array.from(filters[filterName].values).every((itemValue) =>
+          itemValues.includes(itemValue),
+        )
+      } else {
+        const itemValue = (
+          item.filterFields && filterName in item.filterFields ? item.filterFields[filterName] : ''
+        ) as string
+        return itemValue && filters[filterName].values.has(itemValue)
+      }
     })
   })
 }

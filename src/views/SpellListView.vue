@@ -31,7 +31,12 @@ const print = async () => {
     />
   </div>
   <div class="spells">
-    <SpellCard :card-design="cardModel" :spell-info="selectedSpell" :two-sided="twoSided" />
+    <SpellCard
+      v-if="selectedSpell != undefined"
+      :card-design="cardModel"
+      :spell-info="selectedSpell"
+      :two-sided="twoSided"
+    />
   </div>
   <div v-if="printing">
     <CardPrint :card-model="cardModel" :two-sided="twoSided" />

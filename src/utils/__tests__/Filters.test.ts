@@ -4,98 +4,79 @@ import { createFilters, applyFilters, type FilterOptions } from '../Filters'
 type Person = {
   name: string
   age: number
-  meta: { role: string }
+  filterFields: { age: number; role: string }
 }
 
 describe('createFilters', () => {
   it('should create filters from data', () => {
-    const data: Person[] = [
-      { name: 'Alice', age: 30, meta: { role: 'admin' } },
-      { name: 'Bob', age: 25, meta: { role: 'user' } },
-      { name: 'Charlie', age: 35, meta: { role: 'admin' } },
-    ]
+    const alice: Person = { name: 'Alice', age: 30, filterFields: { age: 30, role: 'admin' } }
+    const bob: Person = { name: 'Bob', age: 25, filterFields: { age: 25, role: 'user' } }
+    const charlie: Person = { name: 'Charlie', age: 35, filterFields: { age: 35, role: 'admin' } }
+    const data: Person[] = [alice, bob, charlie]
 
     const expectedFilters: FilterOptions = {
-      name: new Set(['Alice', 'Bob', 'Charlie']),
-      age: new Set([30, 25, 35]),
-      role: new Set(['admin', 'user']),
+      age: { values: new Set([30, 25, 35]), multiple: false },
+      role: { values: new Set(['admin', 'user']), multiple: false },
     }
 
     const filters = createFilters(data)
     expect(filters).toEqual(expectedFilters)
   })
 
-  it('should create filters without meta key', () => {
-    // override Person to not have meta attribute
-    type Person = {
-      name: string
-      age: number
-    }
-
-    const data: Person[] = [
-      { name: 'Alice', age: 30 },
-      { name: 'Bob', age: 25 },
-      { name: 'Charlie', age: 35 },
-    ]
+  it('should exclude keys specified to be excluded', () => {
+    const alice: Person = { name: 'Alice', age: 30, filterFields: { age: 30, role: 'admin' } }
+    const bob: Person = { name: 'Bob', age: 25, filterFields: { age: 25, role: 'user' } }
+    const charlie: Person = { name: 'Charlie', age: 35, filterFields: { age: 35, role: 'admin' } }
+    const data: Person[] = [alice, bob, charlie]
 
     const expectedFilters: FilterOptions = {
-      name: new Set(['Alice', 'Bob', 'Charlie']),
-      age: new Set([30, 25, 35]),
+      age: { values: new Set([30, 25, 35]), multiple: false },
     }
 
-    const filters = createFilters(data)
+    const filters = createFilters(data, ['name', 'role'])
     expect(filters).toEqual(expectedFilters)
   })
 })
 
 describe('applyFilters', () => {
   it('should filter data based on filters', () => {
-    const data: Person[] = [
-      { name: 'Alice', age: 30, meta: { role: 'admin' } },
-      { name: 'Bob', age: 25, meta: { role: 'user' } },
-      { name: 'Charlie', age: 35, meta: { role: 'admin' } },
-    ]
+    const alice: Person = { name: 'Alice', age: 30, filterFields: { age: 30, role: 'admin' } }
+    const bob: Person = { name: 'Bob', age: 25, filterFields: { age: 25, role: 'user' } }
+    const charlie: Person = { name: 'Charlie', age: 35, filterFields: { age: 35, role: 'admin' } }
+    const data: Person[] = [alice, bob, charlie]
 
     const filters: FilterOptions = {
-      role: new Set(['admin']),
+      role: { values: new Set(['admin']), multiple: false },
     }
 
-    const expectedFilteredData: Person[] = [
-      { name: 'Alice', age: 30, meta: { role: 'admin' } },
-      { name: 'Charlie', age: 35, meta: { role: 'admin' } },
-    ]
+    const expectedFilteredData: Person[] = [alice, charlie]
 
     const filteredData = applyFilters(data, filters)
     expect(filteredData).toEqual(expectedFilteredData)
   })
 
   it('should only apply non-empty filters', () => {
-    const data: Person[] = [
-      { name: 'Alice', age: 30, meta: { role: 'admin' } },
-      { name: 'Bob', age: 25, meta: { role: 'user' } },
-      { name: 'Charlie', age: 35, meta: { role: 'admin' } },
-    ]
+    const alice: Person = { name: 'Alice', age: 30, filterFields: { age: 30, role: 'admin' } }
+    const bob: Person = { name: 'Bob', age: 25, filterFields: { age: 25, role: 'user' } }
+    const charlie: Person = { name: 'Charlie', age: 35, filterFields: { age: 35, role: 'admin' } }
+    const data: Person[] = [alice, bob, charlie]
 
     const filters: FilterOptions = {
-      age: new Set([]),
-      role: new Set(['admin']),
+      age: { values: new Set([]), multiple: false },
+      role: { values: new Set(['admin']), multiple: false },
     }
 
-    const expectedFilteredData: Person[] = [
-      { name: 'Alice', age: 30, meta: { role: 'admin' } },
-      { name: 'Charlie', age: 35, meta: { role: 'admin' } },
-    ]
+    const expectedFilteredData: Person[] = [alice, charlie]
 
     const filteredData = applyFilters(data, filters)
     expect(filteredData).toEqual(expectedFilteredData)
   })
 
   it('should return all data if no filters are applied', () => {
-    const data: Person[] = [
-      { name: 'Alice', age: 30, meta: { role: 'admin' } },
-      { name: 'Bob', age: 25, meta: { role: 'user' } },
-      { name: 'Charlie', age: 35, meta: { role: 'admin' } },
-    ]
+    const alice: Person = { name: 'Alice', age: 30, filterFields: { age: 30, role: 'admin' } }
+    const bob: Person = { name: 'Bob', age: 25, filterFields: { age: 25, role: 'user' } }
+    const charlie: Person = { name: 'Charlie', age: 35, filterFields: { age: 35, role: 'admin' } }
+    const data: Person[] = [alice, bob, charlie]
 
     const filters: FilterOptions = {}
 
@@ -107,10 +88,45 @@ describe('applyFilters', () => {
     const data: Person[] = []
 
     const filters: FilterOptions = {
-      role: new Set(['admin']),
+      role: { values: new Set(['admin']), multiple: false },
     }
 
     const filteredData = applyFilters(data, filters)
     expect(filteredData).toEqual([])
+  })
+
+  it('should handle items with multiple selections', () => {
+    type Person = {
+      name: string
+      age: number
+      filterFields: { age: number; role: string; preferredPizzaFlavors: string[] }
+    }
+
+    const alice: Person = {
+      name: 'Alice',
+      age: 30,
+      filterFields: { age: 30, role: 'admin', preferredPizzaFlavors: ['Blue, Green'] },
+    }
+    const bob: Person = {
+      name: 'Bob',
+      age: 25,
+      filterFields: { age: 25, role: 'user', preferredPizzaFlavors: ['Green', 'Red'] },
+    }
+    const charlie: Person = {
+      name: 'Charlie',
+      age: 35,
+      filterFields: { age: 35, role: 'admin', preferredPizzaFlavors: ['Blue', 'Green', 'Red'] },
+    }
+
+    const data: Person[] = [alice, bob, charlie]
+
+    const filters: FilterOptions = {
+      preferredPizzaFlavors: { values: new Set(['Green', 'Red']), multiple: true },
+    }
+
+    const expectedFilteredData: Person[] = [bob, charlie]
+
+    const filteredData = applyFilters(data, filters)
+    expect(filteredData).toEqual(expectedFilteredData)
   })
 })
