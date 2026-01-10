@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { emptyCard } from '@/models/CardModel'
-import { emptySpell, defaultSpells, type SpellModel } from '@/models/SpellModel'
+import { defaultSpells, type SpellModel } from '@/models/SpellModel'
 import { useSpellListStore } from '@/stores/spellList'
-import { computed, nextTick, ref, toRaw } from 'vue'
+import { computed, ref, shallowRef, watchEffect } from 'vue'
 import LoadSave from './LoadSave.vue'
-import SpellCard from './SpellCard.vue'
 import type { SupportedType } from '@/utils/FileUtils'
+import { paginateSpells, type PaginationResult } from '@/services/Pagination'
 
 interface IEmits {
   'update-spell': [newSpell: SpellModel]
@@ -17,10 +16,13 @@ spellListStore.spellList = defaultSpells
 
 const emit = defineEmits<IEmits>()
 
+const paginationResult = shallowRef<PaginationResult | null>(null)
+
 const selectedId = ref<number>(0)
 
 const selectedSpell = computed<SpellModel>(() => {
-  const newSpell = spellListStore.spellList[selectedId.value]
+  const newSpell =
+    paginationResult.value?.pagesList[selectedId.value].card ?? spellListStore.spellList[0]
   emit('update-spell', newSpell)
   return newSpell
 })
@@ -46,7 +48,6 @@ const loadSpellsFromFile = (file: File) => {
 
         console.log('Finished loading spell list:', spellListStore.spellList)
         selectedId.value = 0
-        paginateSpells()
       }
     } catch (error) {
       console.error('Error while reading spell list file:', error)
@@ -58,109 +59,9 @@ const loadSpellsFromFile = (file: File) => {
   fileReader.readAsText(file)
 }
 
-const testSpellCardElement = ref<HTMLElement>()
-const testSpell = ref<SpellModel>(emptySpell)
-const testingMode = ref<boolean>(false)
-
-async function paginateSpells() {
-  const newSpellList: SpellModel[] = []
-  testingMode.value = true
-  await nextTick()
-  for (const spell of spellListStore.spellList) {
-    const spellCopy = structuredClone(toRaw(spell))
-    spellCopy.description = ''
-    testSpell.value = spellCopy
-    await nextTick()
-    const paginatedDescription = paginateText(spell.description)
-    if (paginatedDescription.length > 1) {
-      let pageNum = 1
-      paginatedDescription.forEach((textPage: string) => {
-        const spellPart = structuredClone(toRaw(spell))
-        spellPart.name += ` [${pageNum++}/${paginatedDescription.length}]`
-        spellPart.description = textPage
-        newSpellList.push(spellPart)
-      })
-    } else {
-      newSpellList.push(spell)
-    }
-  }
-  testingMode.value = false
-  testSpell.value = emptySpell
-  spellListStore.spellList = newSpellList
-}
-
-function paginateText(text: string) {
-  const paginatedText = []
-  const pageContainer = testSpellCardElement.value?.getElementsByClassName(
-    'text-container',
-  )[0] as HTMLElement
-  const currentPage = testSpellCardElement.value?.getElementsByClassName('text')[0] as HTMLElement
-
-  if (currentPage == undefined || fitsInPage(text)) {
-    return [text]
-  }
-
-  currentPage.innerHTML = ''
-
-  const textArray: string[] = text.split(' ')
-  while (textArray.length > 0) {
-    let min = 0
-    let max = textArray.length - 1
-    let mid = max
-    while (min < max) {
-      const words = textArray.slice(0, mid + 1).join(' ')
-      if (fitsInPage(words)) {
-        min = mid
-      } else {
-        max = mid - 1
-      }
-      mid = Math.floor((min + max + 1) / 2)
-    }
-    const textPage = textArray.splice(0, min + 1).join(' ')
-    paginatedText.push(addUnopenedTags(textPage))
-  }
-
-  function fitsInPage(words: string) {
-    currentPage!.innerHTML = words
-    return pageContainer!.offsetHeight >= pageContainer!.scrollHeight
-  }
-
-  function addUnopenedTags(text: string) {
-    const tagPattern: RegExp = /<\/?([a-zA-Z]+)[^>]*>/g
-    const openTags: string[] = []
-    const closeTags: string[] = []
-    let match: RegExpExecArray | null
-
-    while ((match = tagPattern.exec(text)) !== null) {
-      if (match[0][1] === '/') {
-        // Closing tag
-        const lastTag = openTags.pop()
-        const newTag = match[1]
-        if (lastTag === undefined) {
-          closeTags.push(newTag)
-        } else if (lastTag !== newTag) {
-          // Mismatched tag, add the lastTag back and push new close tag
-          openTags.push(lastTag)
-          closeTags.push(newTag)
-        }
-      } else if (!['<br>', '<wbr>'].includes(match[0])) {
-        // Opening tag
-        openTags.push(match[1])
-      }
-    }
-
-    // Add the unopened tags at the beginning of the text
-    const unopenedTags = closeTags
-      .reverse()
-      .map((tag) => `<${tag}>`)
-      .join('')
-    return unopenedTags + text
-  }
-
-  return paginatedText
-}
-
-paginateSpells()
+watchEffect(async () => {
+  paginationResult.value = await paginateSpells(spellListStore.spellList)
+})
 </script>
 
 <template>
@@ -210,17 +111,14 @@ paginateSpells()
       size="10"
     >
       <option
-        v-for="(spell, index) in spellListStore.spellList"
+        v-for="(spell, index) in paginationResult?.pagesList"
         :key="index"
         :value="index"
-        :title="spell.name"
+        :title="spell.label"
       >
-        {{ spell.level + ': ' + spell.name }}
+        {{ spell.card.level + ': ' + spell.card.name }}
       </option>
     </select>
-  </div>
-  <div v-if="testingMode" ref="testSpellCardElement">
-    <SpellCard :card-design="emptyCard" :spell-info="testSpell" :two-sided="false" />
   </div>
 </template>
 
