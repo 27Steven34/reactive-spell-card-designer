@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { type SpellModel } from '@/models/SpellModel'
+import { hasMaterials, hasSpellInfo1, hasSpellInfo2, useSmallCardName } from '@/utils/LayoutUtils'
 import { marked } from 'marked'
 
 interface IProps {
@@ -12,136 +13,50 @@ defineProps<IProps>()
 <template>
   <div class="front">
     <div class="body">
-      <h3 class="name lined srname" :class="{ small: spell.name.endsWith(']') }">
+      <h3
+        class="name lined srname"
+        :class="{ small: useSmallCardName(spell.name) }"
+        data-field="name"
+      >
         {{ spell.name }}
       </h3>
 
-      <div v-if="spell.castingTime != '' || spell.range != ''" class="status lined">
-        <div><em>casting time</em>{{ spell.castingTime }}</div>
-        <div class="second"><em>range</em>{{ spell.range }}</div>
+      <div v-if="hasSpellInfo1(spell)" class="status lined" data-section="info-1">
+        <div>
+          <em>casting time</em><span data-field="castingTime">{{ spell.castingTime }}</span>
+        </div>
+        <div class="second">
+          <em>range</em><span data-field="range">{{ spell.range }}</span>
+        </div>
         <br clear="all" />
       </div>
 
-      <div v-if="spell.components != '' || spell.duration != ''" class="status lined">
-        <div><em>components</em>{{ spell.components }}</div>
-        <div class="second"><em>duration</em>{{ spell.duration }}</div>
+      <div v-if="hasSpellInfo2(spell)" class="status lined" data-section="info-2">
+        <div>
+          <em>components</em><span data-field="components">{{ spell.components }}</span>
+        </div>
+        <div class="second">
+          <em>duration</em><span data-field="duration">{{ spell.duration }}</span>
+        </div>
         <br clear="all" />
       </div>
 
-      <div v-if="spell.neededMaterials != ''" class="inset">
-        <b class="need">{{ spell.neededMaterials }}</b>
+      <div v-if="hasMaterials(spell)" class="inset" data-section="materials">
+        <b class="need" data-field="neededMaterials">{{ spell.neededMaterials }}</b>
       </div>
 
       <div class="text-container">
-        <p v-dompurify-html="marked(spell.description)" class="text"></p>
+        <p
+          v-dompurify-html="marked(spell.description)"
+          class="text"
+          :class="{ small: false }"
+          data-field="description"
+        ></p>
       </div>
     </div>
     <div class="footer">
-      <b class="class">{{ spell.source }}</b>
-      <b class="type">{{ spell.type }}</b>
+      <b class="class" data-field="source">{{ spell.source }}</b>
+      <b class="type" data-field="type">{{ spell.type }}</b>
     </div>
   </div>
 </template>
-
-<style scoped>
-.front .body {
-  display: flex;
-  flex-flow: column;
-  background-color: #fff !important;
-  border-radius: 5px;
-  height: 100%;
-  overflow: hidden;
-}
-
-.name {
-  font-size: 14px;
-  line-height: normal;
-  padding: 6px 5px;
-  margin: 0;
-  text-transform: uppercase;
-  text-align: center;
-  min-height: 20px;
-  font-weight: bold;
-}
-
-.name.small {
-  font-size: 12px;
-}
-
-.status {
-  list-style: none;
-  text-align: center;
-  padding: 0;
-  margin: 0;
-}
-
-.lined {
-  border-bottom: 2px solid var(--class-color);
-}
-
-.status div {
-  padding: 2px 4px;
-  float: left;
-  vertical-align: top;
-  font-size: 9px;
-  line-height: 9px;
-  min-height: 25px;
-  width: 50%;
-  margin: 0;
-}
-
-.status div.second {
-  border-left: 2px solid var(--class-color);
-}
-
-.status div em {
-  font-style: normal;
-  font-size: 10px;
-  text-transform: uppercase;
-  display: block;
-  color: var(--class-color) !important;
-  font-weight: bold;
-  padding-bottom: 2px;
-}
-
-.inset .need {
-  color: #fff !important;
-  background-color: var(--class-color) !important;
-  display: block;
-  padding: 2px 4px 4px;
-  font-weight: normal;
-  font-style: italic;
-  line-height: 100%;
-  font-size: 8px;
-}
-
-.text-container {
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.text {
-  padding: 2px 4px;
-  font-size: 10px;
-  line-height: 9px;
-  margin: 0;
-}
-
-.footer .class {
-  position: absolute;
-  bottom: 8px;
-  color: #fff !important;
-  left: 10px;
-  font-size: 9px;
-  font-weight: normal;
-}
-
-.footer .type {
-  position: absolute;
-  bottom: 8px;
-  color: #fff !important;
-  right: 10px;
-  font-size: 10px;
-  font-weight: normal;
-}
-</style>

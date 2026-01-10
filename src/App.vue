@@ -15,15 +15,6 @@ import { RouterLink, RouterView } from 'vue-router'
   <RouterView />
 </template>
 
-<style>
-@font-face {
-  font-family: 'rpg-icons';
-  src: url('fonts/rpg-icons.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-}
-</style>
-
 <style scoped>
 header {
   line-height: 1.5;
