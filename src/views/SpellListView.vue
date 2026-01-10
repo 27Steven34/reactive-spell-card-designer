@@ -14,11 +14,14 @@ const selectedSpell = ref<SpellModel>(emptySpell)
 const twoSided = ref<boolean>(true)
 
 const printing = ref<boolean>(false)
-const print = async () => {
+const printSpells = ref<SpellModel[]>([])
+const print = async (spellList: SpellModel[]) => {
+  printSpells.value = spellList
   printing.value = true
   await nextTick()
   window.print()
   printing.value = false
+  printSpells.value = []
 }
 </script>
 
@@ -27,14 +30,19 @@ const print = async () => {
     <CardCustomizer @update-card="(newCard) => (cardModel = newCard)" />
     <SpellSelectionWidget
       @update-spell="(newSpell) => (selectedSpell = newSpell)"
-      @print-spells="print"
+      @print-spells="(spellList) => print(spellList)"
     />
   </div>
   <div class="spells">
-    <SpellCard :card-design="cardModel" :spell-info="selectedSpell" :two-sided="twoSided" />
+    <SpellCard
+      v-if="selectedSpell != undefined"
+      :card-design="cardModel"
+      :spell-info="selectedSpell"
+      :two-sided="twoSided"
+    />
   </div>
   <div v-if="printing">
-    <CardPrint :card-model="cardModel" :two-sided="twoSided" />
+    <CardPrint :card-model="cardModel" :spell-list="printSpells" :two-sided="twoSided" />
   </div>
 </template>
 

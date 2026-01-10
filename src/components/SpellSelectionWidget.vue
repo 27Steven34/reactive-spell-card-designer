@@ -1,29 +1,33 @@
 <script setup lang="ts">
 import { emptyCard } from '@/models/CardModel'
-import { emptySpell, defaultSpells, type SpellModel } from '@/models/SpellModel'
+import { emptySpell, type SpellModel } from '@/models/SpellModel'
 import { useSpellListStore } from '@/stores/spellList'
-import { computed, nextTick, ref, toRaw } from 'vue'
+import { computed, nextTick, ref, toRaw, watch } from 'vue'
 import LoadSave from './LoadSave.vue'
+import FilterModal from './FilterModal.vue'
 import SpellCard from './SpellCard.vue'
 import type { SupportedType } from '@/utils/FileUtils'
+import type { Filterable } from '@/utils/Filters'
 
 interface IEmits {
   'update-spell': [newSpell: SpellModel]
-  'print-spells': []
+  'print-spells': [spellList: SpellModel[]]
 }
 
 const spellListStore = useSpellListStore()
-spellListStore.spellList = defaultSpells
+spellListStore.loadDefaultSpells()
 
 const emit = defineEmits<IEmits>()
 
 const selectedId = ref<number>(0)
 
+const visibleSpells = ref<SpellModel[]>(spellListStore.spellList)
+
 const selectedSpell = computed<SpellModel>(() => {
-  const newSpell = spellListStore.spellList[selectedId.value]
-  emit('update-spell', newSpell)
-  return newSpell
+  return visibleSpells.value[selectedId.value]
 })
+
+watch(selectedSpell, (newSpell) => emit('update-spell', newSpell), { immediate: true })
 
 const saveFileType = ref<SupportedType>('application/json')
 
@@ -56,6 +60,10 @@ const loadSpellsFromFile = (file: File) => {
     console.error('Error while reading spell list file:', ev.target?.error)
   }
   fileReader.readAsText(file)
+}
+
+const updateList = (newList: Filterable[]) => {
+  visibleSpells.value = newList as unknown as SpellModel[]
 }
 
 const testSpellCardElement = ref<HTMLElement>()
@@ -184,7 +192,7 @@ paginateSpells()
       <LoadSave
         supported-mimes="text/csv application/json"
         @file-loaded="(file: File) => loadSpellsFromFile(file)"
-        @save="() => spellListStore.downloadSpellList(saveFileType)"
+        @save="() => spellListStore.downloadSpellList(saveFileType, visibleSpells)"
       >
         <div>
           <input
@@ -200,24 +208,25 @@ paginateSpells()
           <input id="saveCsv" v-model="saveFileType" type="radio" name="CSV" value="text/csv" />
           <label for="saveCsv">CSV</label>
         </div>
-        <button @click="emit('print-spells')">Print</button>
+        <button @click="emit('print-spells', visibleSpells)">Print</button>
       </LoadSave>
     </div>
-    <select
-      v-model="selectedId"
-      class="spell-list-container"
-      :title="`Spell List (${selectedSpell.name})`"
-      size="10"
-    >
-      <option
-        v-for="(spell, index) in spellListStore.spellList"
-        :key="index"
-        :value="index"
-        :title="spell.name"
-      >
-        {{ spell.level + ': ' + spell.name }}
-      </option>
-    </select>
+    <div class="spell-list-container">
+      <FilterModal
+        :all-objects="spellListStore.spellList"
+        @filtered="(results) => updateList(results)"
+      />
+      <select v-model="selectedId" title="Spell List" size="10">
+        <option
+          v-for="(spell, index) in visibleSpells"
+          :key="index"
+          :value="index"
+          :title="spell.name"
+        >
+          {{ spell.level + ': ' + spell.name }}
+        </option>
+      </select>
+    </div>
   </div>
   <div v-if="testingMode" ref="testSpellCardElement">
     <SpellCard :card-design="emptyCard" :spell-info="testSpell" :two-sided="false" />
@@ -226,7 +235,14 @@ paginateSpells()
 
 <style scoped>
 .spell-list-container {
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
   max-width: 20rem;
+}
+
+.spell-list-container * {
+  margin: 0.25rem;
 }
 
 button {

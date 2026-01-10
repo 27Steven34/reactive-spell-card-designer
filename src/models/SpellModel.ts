@@ -24,7 +24,7 @@ export const emptySpell: SpellModel = {
   type: '',
 }
 
-export const defaultSpells: SpellModel[] = [
+export const testSpells: SpellModel[] = [
   {
     name: 'Fireball',
     level: '3',
