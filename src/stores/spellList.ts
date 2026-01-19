@@ -1,8 +1,8 @@
-import { type SpellModel } from '@/models/SpellModel'
+import { defaultSpells, type SpellModel } from '@/models/SpellModel'
 import { saveToCsvFile, saveToJsonFile, type SupportedType } from '@/utils/FileUtils'
 import Papa from 'papaparse'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const spellHeaders: string[] = [
   'level',
@@ -26,15 +26,16 @@ function createSpell(spellData: string[]) {
 }
 
 export const useSpellListStore = defineStore('spellList', () => {
-  const spellList = ref<SpellModel[]>([])
+  const _spellList = ref<SpellModel[]>([])
+  const spellList = computed(() => _spellList.value)
 
   async function downloadSpellList(type: SupportedType) {
     switch (type) {
       case 'application/json':
-        await saveToJsonFile(spellList.value, 'spell-list')
+        await saveToJsonFile(_spellList.value, 'spell-list')
         break
       case 'text/csv':
-        await saveToCsvFile(spellList.value, 'spell-list', spellHeaders)
+        await saveToCsvFile(_spellList.value, 'spell-list', spellHeaders)
         break
       default:
         console.warn(`Unsupported save file type in spellList store: ${type}`)
@@ -49,12 +50,16 @@ export const useSpellListStore = defineStore('spellList', () => {
         parsedList.push(createSpell(results.data))
       },
     })
-    spellList.value = parsedList
+    _spellList.value = parsedList
   }
 
   async function loadSpellsFromJson(spellJson: string) {
-    spellList.value = JSON.parse(spellJson)
+    _spellList.value = JSON.parse(spellJson)
   }
 
-  return { spellList, downloadSpellList, loadSpellsFromCsv: loadSpellsFromCsv, loadSpellsFromJson }
+  function loadDefaultSpells() {
+    _spellList.value = defaultSpells
+  }
+
+  return { spellList, downloadSpellList, loadSpellsFromCsv, loadSpellsFromJson, loadDefaultSpells }
 })

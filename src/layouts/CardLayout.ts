@@ -82,8 +82,12 @@ export function applyCardLayout(root: HTMLElement, spellInfo: SpellModel) {
   }
 }
 
-export function applyCardDescription(root: HTMLElement, text: string, smallFont: boolean = false) {
+export function applyCardDescription(root: HTMLElement, text: string) {
   const descriptionEl = root.querySelector(selectors.text)!
   descriptionEl.innerHTML = DOMPurify.sanitize(marked(text, { async: false }))
-  descriptionEl.toggleAttribute('small', smallFont)
+}
+
+export function applyDescriptionFontSize(root: HTMLElement, fontSize: 'normal' | 'small') {
+  const descriptionEl = root.querySelector(selectors.text)!
+  descriptionEl.classList.toggle('small', fontSize === 'small')
 }

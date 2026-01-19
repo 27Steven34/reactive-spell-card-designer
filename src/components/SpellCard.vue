@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { type CardModel } from '@/models/CardModel'
-import { type SpellModel } from '@/models/SpellModel'
 import CardBack from './CardBack.vue'
 import CardFront from './CardFront.vue'
+import type { SpellPageModel } from '@/models/SpellPageModel'
 
 interface IProps {
   cardDesign: CardModel
-  spellInfo: SpellModel
+  spellPage: SpellPageModel
   twoSided?: boolean
 }
 
@@ -17,8 +17,8 @@ const quoted = (str: string) => `'${str}'`
 
 <template>
   <div class="spellCard" :class="{ 'two-sided': twoSided }">
-    <CardFront :spell="spellInfo" />
-    <CardBack v-if="twoSided" :level="spellInfo.level" />
+    <CardFront :spell-page="spellPage" />
+    <CardBack v-if="twoSided" :level="spellPage.spell.level" />
   </div>
 </template>
 

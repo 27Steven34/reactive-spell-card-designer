@@ -1,19 +1,7 @@
-import { applyCardDescription, applyCardLayout } from '@/layouts/CardLayout'
+import { applyCardDescription, applyCardLayout, applyDescriptionFontSize } from '@/layouts/CardLayout'
+import type { SpellPageModel, PaginationResult } from '@/models/SpellPageModel'
 import { type SpellModel } from '@/models/SpellModel'
 import { djb2Hash, spellID } from '@/utils/LayoutUtils'
-
-interface PaginatedCard {
-  objectId: string
-  label: string
-  pageNo: number
-  pageCount: number
-  card: SpellModel
-}
-
-export interface PaginationResult {
-  pagesList: PaginatedCard[]
-  pagesBySpell: Map<string, PaginatedCard[]>
-}
 
 let measureRoot: HTMLElement
 
@@ -34,14 +22,20 @@ async function initializePaginationEngine() {
 export async function paginateSpells(spellList: SpellModel[]): Promise<PaginationResult> {
   await initializePaginationEngine()
 
-  const pagesList: PaginatedCard[] = []
-  const pagesBySpell = new Map<string, PaginatedCard[]>()
+  const pagesList: SpellPageModel[] = []
+  const pagesBySpell = new Map<string, SpellPageModel[]>()
 
   for (const spell of spellList) {
     applyCardLayout(measureRoot, spell)
 
-    const paginatedDescription = paginateText(spell.description)
-    const spellPages = paginatedDescription.map((textPage, index): PaginatedCard => {
+    const normalPages = paginateText(spell.description)
+    applyDescriptionFontSize(measureRoot, 'small')
+    const smallPages = paginateText(spell.description)
+    applyDescriptionFontSize(measureRoot, 'normal')
+    const fontToUse = smallPages.length < normalPages.length ? 'small' : 'normal'
+
+    const paginatedDescription = fontToUse === 'small' ? smallPages : normalPages
+    const spellPages = paginatedDescription.map((textPage, index): SpellPageModel => {
       const spellPart: SpellModel = { ...spell }
       if (paginatedDescription.length > 1) {
         spellPart.name += ` [${index + 1}/${paginatedDescription.length}]`
@@ -52,11 +46,12 @@ export async function paginateSpells(spellList: SpellModel[]): Promise<Paginatio
         label: spellPart.name,
         pageNo: index + 1,
         pageCount: paginatedDescription.length,
-        card: spellPart,
+        fontSize: fontToUse,
+        spell: spellPart,
       }
     })
 
-    const hash = spellHash(spell).toString(16)
+    const hash = spellHash(spell)
     pagesList.push(...spellPages)
     pagesBySpell.set(hash, spellPages)
   }
@@ -65,12 +60,12 @@ export async function paginateSpells(spellList: SpellModel[]): Promise<Paginatio
 }
 
 /** non-cryptographic sync hash built from layout-affecting spell fields */
-function spellHash(spell: SpellModel) {
+export function spellHash(spell: SpellModel) {
   return djb2Hash(
     [spell.name, spell.castingTime, spell.duration, spell.neededMaterials, spell.description].join(
       '|',
     ),
-  )
+  ).toString(16)
 }
 
 function paginateText(text: string) {

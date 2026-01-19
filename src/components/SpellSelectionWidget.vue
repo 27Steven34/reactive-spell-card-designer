@@ -1,28 +1,27 @@
 <script setup lang="ts">
-import { defaultSpells, type SpellModel } from '@/models/SpellModel'
 import { useSpellListStore } from '@/stores/spellList'
-import { computed, ref, shallowRef, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import LoadSave from './LoadSave.vue'
 import type { SupportedType } from '@/utils/FileUtils'
-import { paginateSpells, type PaginationResult } from '@/services/Pagination'
+import { useSpellPageStore } from '@/stores/spellPages'
+import { spellHash } from '@/services/Pagination'
 
 interface IEmits {
-  'update-spell': [newSpell: SpellModel]
+  'update-spell': [newSpell: string]
   'print-spells': []
 }
 
 const spellListStore = useSpellListStore()
-spellListStore.spellList = defaultSpells
+const spellPageStore = useSpellPageStore()
+
+spellListStore.loadDefaultSpells()
 
 const emit = defineEmits<IEmits>()
 
-const paginationResult = shallowRef<PaginationResult | null>(null)
+const selectedId = ref<string>('')
 
-const selectedId = ref<number>(0)
-
-const selectedSpell = computed<SpellModel>(() => {
-  const newSpell =
-    paginationResult.value?.pagesList[selectedId.value].card ?? spellListStore.spellList[0]
+const selectedSpell = computed<string>(() => {
+  const newSpell = selectedId.value
   emit('update-spell', newSpell)
   return newSpell
 })
@@ -47,7 +46,7 @@ const loadSpellsFromFile = (file: File) => {
         }
 
         console.log('Finished loading spell list:', spellListStore.spellList)
-        selectedId.value = 0
+        selectedId.value = spellHash(spellListStore.spellList[0])
       }
     } catch (error) {
       console.error('Error while reading spell list file:', error)
@@ -59,9 +58,13 @@ const loadSpellsFromFile = (file: File) => {
   fileReader.readAsText(file)
 }
 
-watchEffect(async () => {
-  paginationResult.value = await paginateSpells(spellListStore.spellList)
-})
+watch(
+  () => spellListStore.spellList,
+  async () => {
+    await spellPageStore.loadSpellPages(spellListStore.spellList)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -107,16 +110,16 @@ watchEffect(async () => {
     <select
       v-model="selectedId"
       class="spell-list-container"
-      :title="`Spell List (${selectedSpell.name})`"
+      :title="`Spell List (${spellPageStore.pagesBySpell.get(selectedSpell)?.at(0)?.spell.name})`"
       size="10"
     >
       <option
-        v-for="(spell, index) in paginationResult?.pagesList"
-        :key="index"
-        :value="index"
-        :title="spell.label"
+        v-for="spell in spellListStore.spellList"
+        :key="spellHash(spell)"
+        :value="spellHash(spell)"
+        :title="spell.name"
       >
-        {{ spell.card.level + ': ' + spell.card.name }}
+        {{ spell.level + ': ' + spell.name }}
       </option>
     </select>
   </div>
