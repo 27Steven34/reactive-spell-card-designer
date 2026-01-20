@@ -1,4 +1,8 @@
-import { applyCardDescription, applyCardLayout, applyDescriptionFontSize } from '@/layouts/CardLayout'
+import {
+  applyCardDescription,
+  applyCardLayout,
+  applyDescriptionFontSize,
+} from '@/layouts/CardLayout'
 import type { SpellPageModel, PaginationResult } from '@/models/SpellPageModel'
 import { type SpellModel } from '@/models/SpellModel'
 import { djb2Hash, spellID } from '@/utils/LayoutUtils'

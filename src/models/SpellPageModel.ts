@@ -1,4 +1,4 @@
-import type { SpellModel } from "./SpellModel"
+import type { SpellModel } from './SpellModel'
 
 export type CardFontOption = 'normal' | 'small'
 
