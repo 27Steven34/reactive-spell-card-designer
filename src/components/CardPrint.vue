@@ -2,8 +2,11 @@
 import type { CardModel } from '@/models/CardModel'
 import { useSpellListStore } from '@/stores/spellList'
 import SpellCard from './SpellCard.vue'
+import { useSpellPageStore } from '@/stores/spellPages'
+import { spellHash } from '@/services/Pagination'
 
-const spellList = useSpellListStore().spellList
+const spellListStore = useSpellListStore()
+const spellPageStore = useSpellPageStore()
 
 interface IProps {
   cardModel: CardModel
@@ -15,13 +18,15 @@ withDefaults(defineProps<IProps>(), { twoSided: true })
 
 <template>
   <div id="print-area" class="print-area">
-    <SpellCard
-      v-for="spell in spellList"
-      :key="spell.name"
-      :card-design="cardModel"
-      :spell-info="spell"
-      :two-sided="twoSided"
-    />
+    <template v-for="spell in spellListStore.spellList" :key="spell.name">
+      <SpellCard
+        v-for="spellPage in spellPageStore.pagesBySpell.get(spellHash(spell))"
+        :key="spellPage.objectId"
+        :card-design="cardModel"
+        :spell-page="spellPage"
+        :two-sided="twoSided"
+      />
+    </template>
   </div>
 </template>
 

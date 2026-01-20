@@ -4,12 +4,15 @@ import CardPrint from '@/components/CardPrint.vue'
 import SpellCard from '@/components/SpellCard.vue'
 import SpellSelectionWidget from '@/components/SpellSelectionWidget.vue'
 import { emptyCard, type CardModel } from '@/models/CardModel'
-import { emptySpell, type SpellModel } from '@/models/SpellModel'
-import { nextTick, ref } from 'vue'
+import { useSpellPageStore } from '@/stores/spellPages'
+import { computed, nextTick, ref } from 'vue'
+
+const spellPageStore = useSpellPageStore()
 
 const cardModel = ref<CardModel>(emptyCard)
 
-const selectedSpell = ref<SpellModel>(emptySpell)
+const selectedSpell = ref<string>('')
+const spellPages = computed(() => spellPageStore.pagesBySpell.get(selectedSpell.value))
 
 const twoSided = ref<boolean>(true)
 
@@ -30,8 +33,10 @@ const print = async () => {
       @print-spells="print"
     />
   </div>
-  <div class="spells">
-    <SpellCard :card-design="cardModel" :spell-info="selectedSpell" :two-sided="twoSided" />
+  <div v-if="spellPages">
+    <div v-for="(spellPage, index) in spellPages" :key="index" class="spells">
+      <SpellCard :card-design="cardModel" :spell-page="spellPage" :two-sided="twoSided" />
+    </div>
   </div>
   <div v-if="printing">
     <CardPrint :card-model="cardModel" :two-sided="twoSided" />
