@@ -14,8 +14,6 @@ interface IEmits {
 const spellListStore = useSpellListStore()
 const spellPageStore = useSpellPageStore()
 
-spellListStore.loadDefaultSpells()
-
 const emit = defineEmits<IEmits>()
 
 const selectedId = ref<string>('')
@@ -65,6 +63,11 @@ watch(
   },
   { immediate: true },
 )
+
+void (() => {
+  spellListStore.loadDefaultSpells()
+  selectedId.value = spellHash(spellListStore.spellList[0])
+})()
 </script>
 
 <template>
